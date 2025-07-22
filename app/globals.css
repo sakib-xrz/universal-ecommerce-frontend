@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #f9fafb; /*  - Light greyish-blue, for page background */
+    --foreground: #051034; /*  - Deep navy-blue, for main text */
+    --card: #f8fafe; /*  - Soft-blue, for card backgrounds */
+    --card-foreground: #051034; /*  - Deep navy-blue, for text on cards */
+    --popover: #f8fafe; /*  - Matches card background for popovers */
+    --popover-foreground: #051034; /*  - Deep navy-blue, for popover text */
+    --primary: #051034; /*  - Rich navy-blue, for primary buttons and links */
+    --primary-foreground: #fcfcfc; /*  - Almost-white, for text on primary elements */
+    --secondary: #e9edf7; /*  - Light greyish-blue, for secondary elements */
+    --secondary-foreground: #051034; /*  - Deep navy-blue, for text on secondary elements */
+    --muted: #e9edf7; /*  - Light greyish-blue, for muted elements */
+    --muted-foreground: #6b7280; /*  - Subtle-grey, for muted text */
+    --accent: #d9dff1; /*  - Greenish-blue, for accents like hover states */
+    --accent-foreground: #051034; /*  - Deep navy-blue, for text on accent elements */
+    --destructive: #e63946; /*  - Vibrant-red, for destructive actions like deletes */
+    --destructive-foreground: #fcfcfc; /*  - Almost-white, for text on destructive elements */
+    --border: #c7d2e6; /*  - Light blue-grey, for borders */
+    --input: #c7d2e6; /*  - Matches border color for inputs */
+    --ring: #051034; /*  - Deep navy-blue, for focus rings */
+    --radius: 0.5rem; /*  corners for elements */
+    --chart-1: #243b55; /*  - Dark-navy, for chart primary */
+    --chart-2: #43b8aa; /*  - Greenish-blue, for chart accents */
+    --chart-3: #3694c1; /*  - Deep-cyan, for chart elements */
+    --chart-4: #43b8aa; /*  - Matches accent greenish-blue */
+    --chart-5: #f4a261; /*  - Vibrant-orange, for variety in charts */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.swiper-pagination-bullet-active {
+  background-color: white !important;
+}
+
+.swiper-button-prev:after {
+  font-size: larger !important;
+}
+.swiper-button-next:after {
+  font-size: larger !important;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  color: white !important;
+  width: inherit !important;
+}
