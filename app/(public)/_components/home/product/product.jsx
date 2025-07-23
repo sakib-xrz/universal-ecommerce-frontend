@@ -12,8 +12,15 @@ import SectionHeading from "@/components/shared/section-heading";
 
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
+import YoutubeVideo from "@/components/shared/youtube-video";
 
-export default function Product({ banner, title, slug, products }) {
+export default function Product({
+  banner,
+  title,
+  slug,
+  products,
+  youtube_video_link,
+}) {
   console.log(slug);
 
   return (
@@ -75,6 +82,12 @@ export default function Product({ banner, title, slug, products }) {
           ))}
         </Swiper>
       </div>
+
+      {youtube_video_link && (
+        <div className="mx-auto mt-5 max-w-5xl rounded-lg bg-white p-3 shadow-md lg:mt-10">
+          <YoutubeVideo youtube_video_link={youtube_video_link} />
+        </div>
+      )}
     </Container>
   );
 }

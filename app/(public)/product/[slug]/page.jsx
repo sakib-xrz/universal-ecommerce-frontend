@@ -6,10 +6,7 @@ export async function generateMetadata({ params }) {
 
   return {
     title: product?.data?.name,
-    description:
-      product?.data?.short_description ||
-      "A clothing based e-commerce website. Buy your favorite clothes at affordable prices. We have a wide range of clothing products. Shop now!",
-    keywords: "clothing, e-commerce, shop, buy, clothes",
+    description: product?.data?.short_description || "",
     openGraph: {
       images:
         product?.data?.images && product?.data?.images.length > 0
