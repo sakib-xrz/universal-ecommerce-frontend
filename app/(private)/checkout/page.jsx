@@ -20,8 +20,10 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
+import { useSettings } from "@/components/shared/global-provider";
 
 export default function Checkout() {
+  const settings = useSettings();
   const searchParams = useSearchParams();
   const router = useRouter();
   const dispatch = useDispatch();
@@ -70,8 +72,6 @@ export default function Checkout() {
       note: "",
       platform: "WEBSITE",
       payment_method: "CASH_ON_DELIVERY",
-      last_4_digit: "",
-      transaction_id: "",
       product: [],
     },
     validationSchema: Yup.object().shape({
@@ -80,27 +80,16 @@ export default function Checkout() {
       address_line: Yup.string().required("Address is required"),
     }),
     onSubmit: async (values) => {
-      const { last_4_digit, transaction_id, ...rest } = values;
+      const { ...rest } = values;
 
       let payload;
 
-      if (values.payment_method === "CASH_ON_DELIVERY") {
-        payload = {
-          ...rest,
-          phone: values.phone.startsWith("+88")
-            ? values.phone
-            : `+88${values.phone}`,
-        };
-      } else {
-        payload = {
-          ...rest,
-          phone: values.phone.startsWith("+88")
-            ? values.phone
-            : `+88${values.phone}`,
-          last_4_digit,
-          transaction_id,
-        };
-      }
+      payload = {
+        ...rest,
+        phone: values.phone.startsWith("+88")
+          ? values.phone
+          : `+88${values.phone}`,
+      };
 
       try {
         await createOrder(payload).unwrap();
@@ -245,91 +234,6 @@ export default function Checkout() {
               />
             </div>
           </div>
-
-          <h2 className="mt-4 text-lg font-semibold">PAYMENT METHOD</h2>
-
-          <div className="my-2">
-            <hr />
-          </div>
-
-          <div className="space-y-2">
-            <div className="space-y-1">
-              <Label htmlFor="payment_method" required>
-                Payment Method
-              </Label>
-              <RadioGroup
-                className="flex gap-2 max-xs:flex-col xs:flex-row"
-                defaultValue="CASH_ON_DELIVERY"
-                onValueChange={(value) => {
-                  formik.setFieldValue("payment_method", value);
-                }}
-              >
-                {paymentMethodOptions.map((item) => (
-                  <label
-                    key={item.value}
-                    htmlFor={item.value}
-                    className="shadow-xs relative w-fit cursor-pointer max-xs:w-full"
-                  >
-                    <div
-                      className={cn(
-                        "shadow-xs relative flex cursor-pointer flex-col items-center gap-3 rounded-md border border-input px-2 py-3 text-center max-xs:w-full",
-                        {
-                          "bg-secondary text-secondary-foreground":
-                            formik.values.payment_method === item.value,
-                        },
-                      )}
-                    >
-                      <RadioGroupItem
-                        id={item.value}
-                        name="payment_method"
-                        value={item.value}
-                        className="peer sr-only"
-                      />
-                      <p className="text-sm font-medium leading-none">
-                        {item.label}
-                      </p>
-                    </div>
-                  </label>
-                ))}
-              </RadioGroup>
-            </div>
-
-            {formik.values.payment_method &&
-              formik.values.payment_method !== "CASH_ON_DELIVERY" && (
-                <div className="flex flex-col gap-4 lg:flex-row">
-                  <div className="flex-1">
-                    <Label htmlFor="last_4_digit" required>
-                      Last 4 Digit
-                    </Label>
-                    <Input
-                      type="text"
-                      id="last_4_digit"
-                      name="last_4_digit"
-                      placeholder="Enter last 4 digit"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.last_4_digit}
-                    />
-                    <FormikErrorBox formik={formik} field="last_4_digit" />
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="transaction_id" required>
-                      Transaction ID
-                    </Label>
-                    <Input
-                      type="text"
-                      id="transaction_id"
-                      name="transaction_id"
-                      placeholder="Enter your transaction ID"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.transaction_id}
-                    />
-                    <FormikErrorBox formik={formik} field="transaction_id" />
-                  </div>
-                </div>
-              )}
-          </div>
         </div>
         <div className="h-fit bg-white p-4 sm:rounded-md sm:p-6 sm:shadow">
           <h2 className="text-lg font-semibold">Order Summery</h2>
@@ -422,7 +326,10 @@ export default function Checkout() {
                     Delivery Charge
                   </p>
                   <p className="text-sm font-medium">
-                    TK. {formik.values.is_inside_dhaka ? 70 : 130}
+                    TK.{" "}
+                    {formik.values.is_inside_dhaka
+                      ? settings?.delivery_charge_inside_dhaka
+                      : settings?.delivery_charge_outside_dhaka}
                   </p>
                 </div>
                 <div className="my-2">
@@ -431,7 +338,11 @@ export default function Checkout() {
                 <div className="flex justify-between">
                   <p className="text-lg font-medium">Grand Total</p>
                   <p className="text-lg font-medium">
-                    TK. {subtotal + (formik.values.is_inside_dhaka ? 70 : 130)}
+                    TK.{" "}
+                    {subtotal +
+                      (formik.values.is_inside_dhaka
+                        ? settings?.delivery_charge_inside_dhaka
+                        : settings?.delivery_charge_outside_dhaka)}
                   </p>
                 </div>
               </div>
