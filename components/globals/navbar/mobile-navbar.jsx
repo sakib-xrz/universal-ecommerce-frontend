@@ -27,7 +27,7 @@ export default function MobileNavbar({ menus }) {
             <Menu size={24} />
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex items-center justify-center">
             <Link href={"/"} className="w-fit" aria-label="Let'z Gear Logo">
               <Image
                 src={settings?.logo || logo}

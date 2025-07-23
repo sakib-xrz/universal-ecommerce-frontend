@@ -35,7 +35,7 @@ export default function DesktopNavbar({ menus }) {
           <Container className="grid items-center justify-center border-b border-gray-200 lg:grid-cols-3 lg:py-4">
             <GlobalSearchbar />
 
-            <div className="flex justify-center">
+            <div className="flex items-center justify-center">
               <Link href={"/"} className="w-fit" aria-label="Let'z Gear Logo">
                 <Image
                   src={settings?.logo || logo}
