@@ -14,10 +14,12 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import SocialShare from "@/components/shared/social-share";
 import Link from "next/link";
+import { useSettings } from "@/components/shared/global-provider";
 
 export default function ProductInfo({ product }) {
   const router = useRouter();
   const dispatch = useDispatch();
+  const settings = useSettings();
   const isInWishlist = useIsInWishlist(product.id);
   const isInCart = useIsInCart(product.id);
 
@@ -156,10 +158,10 @@ export default function ProductInfo({ product }) {
         </Button>
 
         <div className="flex items-center gap-4">
-          <Link href="tel:+8801300606317" className="block max-xs:w-full">
+          <Link href={`tel:${settings.phone}`} className="block max-xs:w-full">
             <Button className="max-xs:w-full">
               <Phone className="mr-2 h-4 w-4" />
-              +880 1300-606317
+              {settings.phone}
             </Button>
           </Link>
 
