@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,22 @@ export default function ProductImages({ images, name }) {
   const [selectedImage, setSelectedImage] = useState(
     images?.[0]?.image_url || null,
   );
+  const [isHovering, setIsHovering] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const imageRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!imageRef.current) return;
+
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    setMousePosition({ x, y });
+  };
+
+  const handleMouseEnter = () => setIsHovering(true);
+  const handleMouseLeave = () => setIsHovering(false);
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row">
@@ -40,15 +56,55 @@ export default function ProductImages({ images, name }) {
           ))}
         </div>
       )}
-      <div className="order-1 flex-1 lg:order-2">
-        <Image
-          src={selectedImage || "/default-product.jpg"}
-          alt={name || "Product image"}
-          width={900}
-          height={900}
-          loading="eager"
-          className="aspect-square rounded object-cover"
-        />
+      <div className="relative order-1 flex-1 lg:order-2">
+        {/* Main Image */}
+        <div
+          ref={imageRef}
+          className="relative overflow-hidden rounded"
+          onMouseMove={handleMouseMove}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          <Image
+            src={selectedImage || "/default-product.jpg"}
+            alt={name || "Product image"}
+            width={900}
+            height={900}
+            loading="eager"
+            className="aspect-square w-full cursor-zoom-in object-cover"
+          />
+
+          {/* Zoom Lens */}
+          {isHovering && (
+            <div
+              className="pointer-events-none absolute z-10 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-gray-300 bg-white/20"
+              style={{
+                left: `${mousePosition.x}%`,
+                top: `${mousePosition.y}%`,
+              }}
+            />
+          )}
+        </div>
+
+        {/* Zoomed View */}
+        {isHovering && (
+          <div className="absolute left-full top-0 z-20 ml-4 h-96 w-96 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg max-lg:left-0 max-lg:top-full max-lg:ml-0 max-lg:mt-4 max-lg:h-80 max-lg:w-full max-sm:h-full">
+            <div className="h-full w-full overflow-hidden">
+              <Image
+                src={selectedImage || "/default-product.jpg"}
+                alt={name || "Product image"}
+                width={900}
+                height={900}
+                loading="eager"
+                className="h-full w-full object-cover"
+                style={{
+                  transform: `scale(2.5)`,
+                  transformOrigin: `${mousePosition.x}% ${mousePosition.y}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

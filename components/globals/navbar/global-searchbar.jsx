@@ -77,7 +77,7 @@ export default function GlobalSearchbar() {
 
       {/* search result popover */}
       {debouncedSearch.length > 0 && isFocused && (
-        <div className="absolute left-0 top-full mt-2 w-full rounded-sm border border-gray-200 bg-white p-2 shadow-lg">
+        <div className="absolute left-0 top-full z-50 mt-2 w-full rounded-sm border border-gray-200 bg-white p-2 shadow-lg">
           {isLoading ? (
             [...Array(5)].map((_, i) => <SearchItemSkeleton key={i} />)
           ) : data?.data?.length > 0 ? (
