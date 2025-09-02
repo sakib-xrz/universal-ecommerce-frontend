@@ -12,7 +12,9 @@ import { cn } from "@/lib/utils";
 import { useGetCartsMutation } from "@/redux/features/cart/cartApi";
 import { clearCart, useCartProducts } from "@/redux/features/cart/cartSlice";
 import { useCreateOrderMutation } from "@/redux/features/order/orderApi";
+import { useCreateGuestOrderMutation } from "@/redux/features/order/guestOrderApi";
 import { useGetProfileQuery } from "@/redux/features/profile/profileApi";
+import { useAuthToken } from "@/redux/features/auth/authSlice";
 import { cityLocationOptions, paymentMethodOptions } from "@/utils/constant";
 import { useFormik } from "formik";
 import Image from "next/image";
@@ -28,6 +30,8 @@ export default function Checkout() {
   const router = useRouter();
   const dispatch = useDispatch();
   const cartItems = useCartProducts();
+  const token = useAuthToken();
+  const isAuthenticated = !!token;
   const buyItems = [
     {
       id: searchParams.get("product"),
@@ -44,10 +48,14 @@ export default function Checkout() {
   const [cart, setCart] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
 
-  const { data: profileData } = useGetProfileQuery();
+  const { data: profileData } = useGetProfileQuery(undefined, {
+    skip: !isAuthenticated,
+  });
   const [getCart] = useGetCartsMutation();
   const [createOrder, { isLoading: isCreatingOrderLoading }] =
     useCreateOrderMutation();
+  const [createGuestOrder, { isLoading: isCreatingGuestOrderLoading }] =
+    useCreateGuestOrderMutation();
 
   const availableCartItems = cart.filter((item) => item.has_stock);
 
@@ -76,6 +84,9 @@ export default function Checkout() {
     },
     validationSchema: Yup.object().shape({
       customer_name: Yup.string().required("Customer name is required"),
+      email: Yup.string()
+        .email("Invalid email format")
+        .required("Email is required"),
       phone: Yup.string().required("Phone number is required"),
       address_line: Yup.string().required("Address is required"),
     }),
@@ -92,7 +103,11 @@ export default function Checkout() {
       };
 
       try {
-        await createOrder(payload).unwrap();
+        if (isAuthenticated) {
+          await createOrder(payload).unwrap();
+        } else {
+          await createGuestOrder(payload).unwrap();
+        }
         formik.resetForm();
         dispatch(clearCart());
         router.push("/order-success");
@@ -109,7 +124,7 @@ export default function Checkout() {
   });
 
   useEffect(() => {
-    if (profileData && cart) {
+    if (profileData && cart && isAuthenticated) {
       const user = profileData?.data;
       formik.setValues({
         ...formik.values,
@@ -124,10 +139,21 @@ export default function Checkout() {
           quantity: Number(item.quantity),
         })),
       });
+    } else if (cart && !isAuthenticated) {
+      // For unauthenticated users, just set the product data
+      formik.setValues({
+        ...formik.values,
+        product: availableCartItems.map((item) => ({
+          product_id: item.id,
+          variant_id: item.variant?.id,
+          size_id: item.variant?.size?.id || null,
+          quantity: Number(item.quantity),
+        })),
+      });
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileData, cart]);
+  }, [profileData, cart, isAuthenticated]);
 
   return (
     <Container>
@@ -177,6 +203,24 @@ export default function Checkout() {
                 <FormikErrorBox formik={formik} field="phone" />
               </div>
             </div>
+
+            {!isAuthenticated && (
+              <div>
+                <Label htmlFor="email" required>
+                  Email
+                </Label>
+                <Input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email address"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.email}
+                />
+                <FormikErrorBox formik={formik} field="email" />
+              </div>
+            )}
 
             <div>
               <Label htmlFor="address_line" required>
@@ -353,7 +397,7 @@ export default function Checkout() {
             className="w-full"
             disabled={!availableCartItems.length}
             type="submit"
-            isLoading={isCreatingOrderLoading}
+            isLoading={isCreatingOrderLoading || isCreatingGuestOrderLoading}
           >
             Place Order
           </Button>

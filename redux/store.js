@@ -3,6 +3,7 @@ import authReducer from "./features/auth/authSlice";
 import wishlistReducer from "./features/wishlist/wishlistSlice";
 import cartReducer from "./features/cart/cartSlice";
 import { baseApi } from "./api/baseApi";
+import { guestApi } from "./api/guestApi";
 import {
   persistReducer,
   persistStore,
@@ -42,6 +43,7 @@ const persistedCartReducer = persistReducer(persistCartConfig, cartReducer);
 export const store = configureStore({
   reducer: {
     [baseApi.reducerPath]: baseApi.reducer,
+    [guestApi.reducerPath]: guestApi.reducer,
     auth: persistedAuthReducer,
     wishlist: persistedWishlistReducer,
     cart: persistedCartReducer,
@@ -51,7 +53,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(baseApi.middleware),
+    }).concat(baseApi.middleware, guestApi.middleware),
 });
 
 export const persistor = persistStore(store);
