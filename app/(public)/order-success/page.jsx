@@ -1,8 +1,43 @@
+"use client";
 import Container from "@/components/shared/container";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import * as pixel from "@/lib/fpixel";
 
 export default function OrderSuccess() {
+  const [loaded, setLoaded] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    // Get purchase data from URL params
+    const purchaseDataParam = searchParams.get("purchaseData");
+
+    if (purchaseDataParam) {
+      try {
+        const purchaseData = JSON.parse(purchaseDataParam);
+
+        // Trigger Facebook Pixel Purchase event
+        pixel.purchase({
+          value: purchaseData.value,
+          currency: purchaseData.currency,
+          content_ids: purchaseData.content_ids,
+          num_items: purchaseData.num_items,
+        });
+      } catch (error) {
+        console.error("Error parsing purchase data:", error);
+      }
+    }
+  }, [pathname, loaded, searchParams]);
+
   return (
     <Container className="flex h-[calc(100svh-450px)] flex-col items-center justify-center">
       <CircleCheckIcon className="h-16 w-16 text-green-500" />

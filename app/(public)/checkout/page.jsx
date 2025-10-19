@@ -8,23 +8,26 @@ import { Input } from "@/components/ui/input";
 import Label from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { useGetCartsMutation } from "@/redux/features/cart/cartApi";
 import { clearCart, useCartProducts } from "@/redux/features/cart/cartSlice";
 import { useCreateOrderMutation } from "@/redux/features/order/orderApi";
 import { useCreateGuestOrderMutation } from "@/redux/features/order/guestOrderApi";
 import { useGetProfileQuery } from "@/redux/features/profile/profileApi";
 import { useAuthToken } from "@/redux/features/auth/authSlice";
-import { cityLocationOptions, paymentMethodOptions } from "@/utils/constant";
+import { cityLocationOptions } from "@/utils/constant";
 import { useFormik } from "formik";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSettings } from "@/components/shared/global-provider";
+import * as pixel from "@/lib/fpixel";
 
 export default function Checkout() {
+  const [loaded, setLoaded] = useState(false);
+  const initiateCheckoutFired = useRef(false);
+
   const settings = useSettings();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -108,9 +111,31 @@ export default function Checkout() {
         } else {
           await createGuestOrder(payload).unwrap();
         }
+
+        // Define purchaseData before using it
+        const deliveryCharge = values.is_inside_dhaka
+          ? settings?.delivery_charge_inside_dhaka || 0
+          : settings?.delivery_charge_outside_dhaka || 0;
+
+        const purchaseData = {
+          value: subtotal + deliveryCharge,
+          currency: "USD",
+          content_ids: availableCartItems.map((item) => item.id.toString()),
+          num_items: availableCartItems.reduce(
+            (total, item) => total + item.quantity,
+            0,
+          ),
+        };
+
         formik.resetForm();
         dispatch(clearCart());
-        router.push("/order-success");
+
+        // Pass purchase data to success page via URL params
+        const queryString = new URLSearchParams({
+          purchaseData: JSON.stringify(purchaseData),
+        }).toString();
+
+        router.push(`/order-success?${queryString}`);
         toast.success("Order placed successfully");
       } catch (error) {
         console.error(error);
@@ -154,6 +179,47 @@ export default function Checkout() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileData, cart, isAuthenticated]);
+
+  useEffect(() => {
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    // Only fire once per page load
+    if (initiateCheckoutFired.current) return;
+
+    if (availableCartItems.length > 0 && subtotal > 0) {
+      const cartProductIds = availableCartItems.map((item) =>
+        item.id.toString(),
+      );
+      const totalQuantity = availableCartItems.reduce(
+        (total, item) => total + item.quantity,
+        0,
+      );
+      const deliveryCharge = formik.values.is_inside_dhaka
+        ? settings?.delivery_charge_inside_dhaka || 0
+        : settings?.delivery_charge_outside_dhaka || 0;
+      const cartTotal = subtotal + deliveryCharge;
+
+      pixel.initiateCheckout({
+        content_ids: cartProductIds,
+        value: cartTotal,
+        currency: "USD",
+        num_items: totalQuantity,
+      });
+
+      // Mark as fired
+      initiateCheckoutFired.current = true;
+    }
+  }, [
+    loaded,
+    availableCartItems,
+    subtotal,
+    settings,
+    formik.values.is_inside_dhaka,
+  ]);
 
   return (
     <Container>
