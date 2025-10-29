@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import SocialShare from "@/components/shared/social-share";
 import Link from "next/link";
 import { useSettings } from "@/components/shared/global-provider";
+import { event as fbEvent } from "@/lib/fpixel";
 
 export default function ProductInfo({ product }) {
   const router = useRouter();
@@ -115,7 +116,7 @@ export default function ProductInfo({ product }) {
           <Button
             className="flex-1"
             disabled={availableStock === 0 || isInCart}
-            onClick={() =>
+            onClick={() => {
               dispatch(
                 addToCart({
                   product: {
@@ -124,8 +125,15 @@ export default function ProductInfo({ product }) {
                     quantity,
                   },
                 }),
-              )
-            }
+              );
+              fbEvent("AddToCart", {
+                value: selectedSize.price * quantity,
+                currency: settings.currency,
+                content_ids: [product.id],
+                content_type: "product",
+                num_items: quantity,
+              });
+            }}
           >
             {isInCart ? "Added to Cart" : "Add to Cart"}
           </Button>

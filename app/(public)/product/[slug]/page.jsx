@@ -1,5 +1,6 @@
 import { getProductBySlug } from "@/api/products";
 import ProductDetails from "./_components/product-details";
+import ProductPixel from "@/components/globals/analytics/ProductPixel";
 
 export async function generateMetadata({ params }) {
   const product = await getProductBySlug(params.slug);
@@ -20,5 +21,10 @@ export async function generateMetadata({ params }) {
 export default async function ProductPage({ params }) {
   const product = await getProductBySlug(params.slug);
 
-  return <ProductDetails product={product?.data} />;
+  return (
+    <>
+      <ProductDetails product={product?.data} />
+      <ProductPixel product={product?.data} slug={params.slug} />
+    </>
+  );
 }

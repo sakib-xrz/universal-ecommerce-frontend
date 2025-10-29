@@ -13,6 +13,7 @@ import {
 import { addToCart, useIsInCart } from "@/redux/features/cart/cartSlice";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { event as fbEvent } from "@/lib/fpixel";
 
 export default function ProductDetails({ product, isOpen, onClose }) {
   const router = useRouter();
@@ -179,7 +180,7 @@ export default function ProductDetails({ product, isOpen, onClose }) {
                 <Button
                   className="flex-1"
                   disabled={availableStock === 0 || isInCart}
-                  onClick={() =>
+                  onClick={() => {
                     dispatch(
                       addToCart({
                         product: {
@@ -188,8 +189,15 @@ export default function ProductDetails({ product, isOpen, onClose }) {
                           quantity,
                         },
                       }),
-                    )
-                  }
+                    );
+                    fbEvent("AddToCart", {
+                      value: selectedSize.price * quantity,
+                      currency: "BDT", // or use your settings if available
+                      content_ids: [product.id],
+                      content_type: "product",
+                      num_items: quantity,
+                    });
+                  }}
                 >
                   {isInCart ? "Added to Cart" : "Add to Cart"}
                 </Button>
